@@ -460,7 +460,7 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     int *map = 0;
     if (mapf) map = read_map(mapf);
 
-    network net = parse_network_cfg_custom(cfgfile, 1, 1);    // set batch=1
+    network net = parse_network_cfg(cfgfile);    // set batch=1
     if (weightfile) {
         load_weights(&net, weightfile);
     }
@@ -518,8 +518,7 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
 
     float nms = .45;
 
-    int nthreads = 4;
-    if (m < 4) nthreads = m;
+    int nthreads = net.batch;
     image* val = (image*)calloc(nthreads, sizeof(image));
     image* val_resized = (image*)calloc(nthreads, sizeof(image));
     image* buf = (image*)calloc(nthreads, sizeof(image));
