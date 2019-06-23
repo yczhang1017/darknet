@@ -383,6 +383,28 @@ static void print_cocos(FILE *fp, char *image_path, detection *dets, int num_box
     }
 }
 
+void print_openimage(FILE *fp, char *id, detection *dets, char **names, int total, int classes, int w, int h)
+{
+    int i, j;
+    fprintf(fp, "%s,", id);
+    for (i = 0; i < total; ++i) {
+        float xmin = (dets[i].bbox.x - dets[i].bbox.w / 2.)/ w;
+        float xmax = (dets[i].bbox.x + dets[i].bbox.w / 2.)/ w;
+        float ymin = (dets[i].bbox.y - dets[i].bbox.h / 2.)/ h;
+        float ymax = (dets[i].bbox.y + dets[i].bbox.h / 2.)/ h;
+
+        if (xmin < 0) xmin = 0;
+        if (ymin < 0) ymin = 0;
+        if (xmax > 1) xmax = 1;
+        if (ymax > 1) ymax = 1;
+        
+        for (j = 0; j < classes; ++j) {
+            if (dets[i].prob[j] >0.25) fprintf(fp, "%s %f %f %f %f %f ", names[j], dets[i].prob[j], xmin, ymin, xmax, ymax);
+        }
+    }
+    fprintf(fp,"\n");
+}
+
 void print_detector_detections(FILE **fps, char *id, detection *dets, int total, int classes, int w, int h)
 {
     int i, j;
@@ -458,6 +480,7 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     FILE **fps = 0;
     int coco = 0;
     int imagenet = 0;
+    int openimage = 0;
     if (0 == strcmp(type, "coco")) {
         if (!outfile) outfile = "coco_results";
         snprintf(buff, 1024, "%s/%s.json", prefix, outfile);
@@ -471,6 +494,13 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
         fp = fopen(buff, "w");
         imagenet = 1;
         classes = 200;
+    }
+    else if (0 == strcmp(type, "openimage")) {
+        if (!outfile) outfile = "openimage";
+        snprintf(buff, 1024, "%s/%s.txt", prefix, outfile);
+        fp = fopen(buff, "w");
+        openimage = 1;
+        classes = 601;
     }
     else {
         if (!outfile) outfile = "comp4_det_test_";
@@ -540,6 +570,9 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
             }
             else if (imagenet) {
                 print_imagenet_detections(fp, i + t - nthreads + 1, dets, nboxes, classes, w, h);
+            }
+            else if (openimage) {
+            	print_openimage(fp, id, dets, names, nboxes, classes, w, h);	
             }
             else {
                 print_detector_detections(fps, id, dets, nboxes, classes, w, h);
