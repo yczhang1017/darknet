@@ -399,7 +399,7 @@ void print_openimage(FILE *fp, char *id, detection *dets, char **names, int tota
         if (ymax > 1) ymax = 1;
         
         for (j = 0; j < classes; ++j) {
-            if (dets[i].prob[j] >0.25) fprintf(fp, "%s %f %f %f %f %f ", names[j], dets[i].prob[j], xmin, ymin, xmax, ymax);
+            if (dets[i].prob[j]) fprintf(fp, "%s %f %f %f %f %f ", names[j], dets[i].prob[j], xmin, ymin, xmax, ymax);
         }
     }
     fprintf(fp,"\n");
@@ -448,7 +448,7 @@ void print_imagenet_detections(FILE *fp, int id, detection *dets, int total, int
     }
 }
 
-void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *outfile)
+void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *outfile, float thresh)
 {
     int j;
     list *options = read_data_cfg(datacfg);
@@ -516,7 +516,6 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     int i = 0;
     int t;
 
-    float thresh = .005;
     float nms = .45;
 
     int nthreads = 4;
@@ -1517,7 +1516,7 @@ void run_detector(int argc, char **argv)
     char *filename = (argc > 6) ? argv[6] : 0;
     if (0 == strcmp(argv[2], "test")) test_detector(datacfg, cfg, weights, filename, thresh, hier_thresh, dont_show, ext_output, save_labels, outfile, letter_box);
     else if (0 == strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear, dont_show, calc_map, mjpeg_port, show_imgs);
-    else if (0 == strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights, outfile);
+    else if (0 == strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights, outfile, thresh);
     else if (0 == strcmp(argv[2], "recall")) validate_detector_recall(datacfg, cfg, weights);
     else if (0 == strcmp(argv[2], "map")) validate_detector_map(datacfg, cfg, weights, thresh, iou_thresh, map_points, NULL);
     else if (0 == strcmp(argv[2], "calc_anchors")) calc_anchors(datacfg, num_of_clusters, width, height, show);
